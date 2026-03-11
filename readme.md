@@ -54,7 +54,7 @@ This repository utilizes a \*\*Spec-Driven Development\*\* workflow optimized fo
 
 Save the global rules content from `.ai-rules.md` under:
 
-` .kiro/steering/global\_rules.md`
+` .kiro/steering/global_rules.md`
 
 \*Kiro will automatically respect these rules for every action.\*
 
