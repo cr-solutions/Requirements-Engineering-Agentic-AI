@@ -1,4 +1,4 @@
-\# Requirements-Engineering for Agentic AI (Industry Standard)
+# Requirements-Engineering for Agentic AI (Industry Standard)
 
 
 
@@ -6,13 +6,13 @@ This repository utilizes a \*\*Spec-Driven Development\*\* workflow optimized fo
 
 
 
-\## 📁 Document Overview
+## 📁 Document Overview
 
 
 
-\### 1. `.ai-rules.md` (The House Rules)
+### 1. `.ai-rules.md` (The House Rules)
 
-\* \*\*Purpose:\*\* Contains global project standards (Git workflow, naming conventions, database schemas, and coding paradigms like the Bouncer Pattern).
+* **Purpose:** Contains global project standards (Git workflow, naming conventions, database schemas, and coding paradigms like the Bouncer Pattern).
 
 \* \*\*Scope:\*\* Project-wide. This is the "DNA" of your code quality.
 
