@@ -84,3 +84,6 @@ Create the file `.ai-rules.md` in the root directory of your project. When you o
 
 4\.  \*\*Verify\*\* the output against your `.ai-rules.md`.
 
+\---
+
+for more let's have a chat :sunglasses:
