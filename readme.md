@@ -32,9 +32,7 @@ Save the global rules content under:
 ### **In Gemini / Amazon Q**
 Create the file `.ai-rules.md` in the root directory of your project. When you open a new chat session, start with this prompt:
 
-> **"Lies die .ai-rules.md im Root-Verzeichnis. Halte dich bei allen Code-Vorschlägen und Git-Operationen strikt an diese Vorgaben."**
-
-*(English equivalent: "Read the .ai-rules.md in the root directory. Strictly adhere to these specifications for all code suggestions and Git operations.")*
+> **"Read the .ai-rules.md in the root directory. Strictly adhere to these specifications for all code suggestions and Git operations."**
 
 ---
 
