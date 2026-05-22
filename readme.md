@@ -29,10 +29,12 @@ Save the global rules content under:
 ` .kiro/steering/global_rules.md`
 *Kiro will automatically respect these rules for every action.*
 
-### **In Gemini / Amazon Q**
-Create the file `.ai-rules.md` in the root directory of your project. When you open a new chat session, start with this prompt:
+### **In Gemini / Amazon Q and other LLM**
+Create the file `.ai-rules.md` or better `.cursorrules` in the root directory of your project. When you open a new chat session, start with this prompt:
 
-> **"Read the .ai-rules.md in the root directory. Strictly adhere to these specifications for all code suggestions and Git operations."**
+> **"Strictly adhere to these specifications for all code suggestions and Git operations."**
+
+Even though it has "Cursor" in the name, .cursorrules has become the absolute de facto universal standard for AI extensions.
 
 ---
 
@@ -40,7 +42,7 @@ Create the file `.ai-rules.md` in the root directory of your project. When you o
 1.  **Draft** your `requirements.md` and `design.md`.
 2.  **Initialize** the `tasks.md`.
 3.  **Point the AI** to these files: *"Implement Task 1 from tasks.md based on the specs in requirements.md and design.md."*
-4.  **Verify** the output against your `.ai-rules.md`.
+4.  **Verify** the output against your `.ai-rules.md`/`.cursorrules`.
 
 ---
 
