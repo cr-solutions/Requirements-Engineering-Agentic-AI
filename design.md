@@ -14,7 +14,25 @@
     * Logic: Token Verification -> Password Hashing -> DB Update -> Invalidate Token.
 
 ## 3. Data Flow
-1. Request -> `AuthController`
-2. `AuthController` -> `ValidationMiddleware`
-3. `ValidationMiddleware` -> `PasswordResetService`
-4. `PasswordResetService` -> `UserRepository` (DB) & `EmailService` (SMTP/Flask-Mail)
+
+### Happy Path
+1. Request → `AuthController`
+2. `AuthController` → `ValidationMiddleware`
+3. `ValidationMiddleware` → `PasswordResetService`
+4. `PasswordResetService` → `UserRepository` (DB) & `EmailService` (SMTP/Flask-Mail)
+5. Response: `200 OK` — generic success message (always, regardless of email existence)
+
+### Error & Edge Case Flows
+
+| Scenario | Where caught | HTTP Code | Response |
+|---|---|---|---|
+| Invalid email format | `ValidationMiddleware` | `400` | `"Invalid email format"` |
+| Email not in DB | `PasswordResetService` | `200` | Generic success (prevents user enumeration) |
+| Active token exists (< 5 min) | `PasswordResetService` | `429` | `"Too many requests. Please wait before retrying."` |
+| Expired token on reset | `PasswordResetService` | `410` | `"The link is invalid or expired"` |
+| Tampered / invalid JWT signature | `PasswordResetService` | `400` | `"The link is invalid or expired"` |
+| Token already used | `PasswordResetService` | `410` | `"This reset link has already been used"` |
+| DB write failure | `UserRepository` | `500` | `"An internal error occurred"` (log full trace) |
+| Email dispatch failure | `EmailService` | `503` | `"Could not send email. Please try again later."` |
+
+> **Note:** The `200` response for unknown emails is intentional — it follows the security principle of not leaking whether an account exists (EARS requirement 2.2).

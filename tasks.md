@@ -21,3 +21,9 @@
     - [ ] Verify squashed commit history before merging.
 
 ## Planned 📋
+
+- [ ] **Task 5: Frontend Integration**
+    - [ ] Build "Forgot Password" form with client-side email validation.
+    - [ ] Build "Reset Password" form with password strength indicator.
+    - [ ] Handle all API error responses with user-friendly messages (map HTTP codes to UI copy).
+    - [ ] Add loading state and disable submit button during request to prevent double-submit.
