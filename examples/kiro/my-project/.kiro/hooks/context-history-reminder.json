@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Update Context History",
+      "trigger": "Stop",
+      "action": {
+        "type": "agent",
+        "prompt": "Update the context history file for the current task under docs/context/ (CONTEXT_HISTORY_<year>-<month>-<day>_<task_name>.md): completed work, decisions, blockers, next steps."
+      }
+    }
+  ]
+}

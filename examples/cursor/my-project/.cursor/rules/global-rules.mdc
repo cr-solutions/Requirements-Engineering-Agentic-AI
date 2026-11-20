@@ -1,0 +1,10 @@
+---
+description: Global AI coding and workflow rules (copy of .ai-rules.md)
+alwaysApply: true
+---
+<!-- BEGIN:ai-rules - filled by scripts/deploy_rules.py from .ai-rules.md, do not edit between the markers -->
+> ⚠️ **TEMPLATE - ACTION REQUIRED:** Replace this block with the full content of the master
+> file `.ai-rules.md` (repository root of Requirements-Engineering-Agentic-AI).
+> Keep the front matter above as it is. Cursor only recognizes `.mdc` files in `.cursor/rules/`.
+> Do not edit the rules here. Change them in `.ai-rules.md` and re-deploy.
+<!-- END:ai-rules -->

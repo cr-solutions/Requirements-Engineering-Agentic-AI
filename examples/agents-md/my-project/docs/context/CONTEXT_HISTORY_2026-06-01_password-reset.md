@@ -1,6 +1,6 @@
 # Context History: Password Reset — 2026-06-01
 
-> This is an example of a context history file. In a real project, create one per task/feature under `.kiro/context/CONTEXT_HISTORY_<date>_<task-name>.md`.
+> This is an example of a context history file. In a real project, create one per task/feature under `docs/context/CONTEXT_HISTORY_<year>-<month>-<day>_<task-name>.md`.
 
 ## Session 1 (2026-06-01)
 

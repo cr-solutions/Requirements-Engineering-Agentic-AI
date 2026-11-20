@@ -1,0 +1,10 @@
+---
+applyTo: "specs/**"
+---
+# Working with feature specs
+
+- Work on exactly one feature folder `specs/<feature-name>/` at a time. Do not read or modify other features.
+- Read `requirements.md`, then `design.md`, then `tasks.md`.
+- Implement one task at a time, in the order of the dependency graph (waves) at the end of `tasks.md`.
+- Tick the checkbox of each finished task and keep the `← design.md §x, requirements §y` references intact.
+- Log decisions, blockers and progress in the context history file (see `.ai-rules.md`, section "Context History").

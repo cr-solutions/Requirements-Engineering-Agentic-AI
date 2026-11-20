@@ -1,5 +1,8 @@
 # Project Structure: [Your Project Name]
 
+> Tool-neutral template. Replace every `[...]` placeholder. Describe YOUR project here,
+> not the AI tooling. Where the tool-specific files live is documented in the readme.
+
 ```
 my-project/
 ├── src/                        # Main source code
@@ -12,17 +15,16 @@ my-project/
 │   └── testcase/               # Test modules (one per feature area)
 │       ├── __init__.py
 │       └── feature_test.py
-├── .kiro/
-│   ├── steering/               # AI steering files (always-on context)
-│   ├── specs/                  # Feature-cut specs (one folder per feature)
-│   │   └── <feature-name>/     # e.g. personal-summary-box/
-│   │       ├── requirements.md # EARS criteria + glossary
-│   │       ├── design.md       # Architecture, data flow, error handling
-│   │       └── tasks.md        # Task checklist + dependency graph
-│   └── context/                # Session history logs
+├── docs/
+│   └── context/                # Session history logs (CONTEXT_HISTORY_<date>_<task>.md)
+├── specs/                      # Feature-cut specs (one folder per feature)
+│   └── <feature-name>/         # e.g. password-reset/
+│       ├── requirements.md     # EARS criteria + glossary
+│       ├── design.md           # Architecture, data flow, error handling
+│       └── tasks.md            # Task checklist + dependency graph
 ├── setup.py                    # Package metadata and build config
 ├── requirements.txt            # Pinned dependencies
-├── .env                        # Local environment variables
+├── .env                        # Local environment variables (never commit)
 └── readme.md                   # Usage documentation
 ```
 

@@ -1,0 +1,11 @@
+---
+description: Product vision, project structure and tech stack
+alwaysApply: true
+---
+# Project Context
+
+Cursor does not inline referenced files. The agent reads them with its tools when needed:
+
+- Product vision: @docs/product.md
+- Project structure: @docs/structure.md
+- Tech stack, build and test commands: @docs/tech.md

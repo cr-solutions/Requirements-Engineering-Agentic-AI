@@ -2,22 +2,58 @@
 
 This repository utilizes a **Spec-Driven Development** workflow optimized for AI Agents. By providing structured context, we eliminate "vibe coding" and ensure production-ready results that adhere to corporate standards and save costs.
 
+**Goal:** as universal as possible, but cleanly specific per tool. One master rules file, one spec format, and a ready-to-copy example project for every supported AI tool.
+
+---
+
+## 🗺 Repository Layout
+
+```
+Requirements-Engineering-Agentic-AI/
+├── .ai-rules.md                 ← MASTER rules (single source of truth, tool-neutral)
+├── scripts/
+│   └── deploy_rules.py          ← fills .ai-rules.md into the tool-specific rules file
+├── templates/
+│   └── steering/                ← tool-neutral templates: product.md, structure.md, tech.md
+└── examples/                    ← one clean example project per tool
+    ├── kiro/my-project/         ← .kiro/steering, .kiro/specs, .kiro/hooks, docs/context
+    ├── claude/my-project/       ← CLAUDE.md, .claude/rules, specs/
+    ├── gemini/my-project/       ← GEMINI.md (+ per-feature GEMINI.md), specs/
+    ├── antigravity/my-project/  ← AGENTS.md, .agents/rules, .agents/skills, specs/
+    ├── cursor/my-project/       ← .cursor/rules/*.mdc, specs/
+    ├── copilot/my-project/      ← .github/copilot-instructions.md, .github/instructions, specs/
+    ├── agents-md/my-project/    ← AGENTS.md: the tool-neutral baseline (Codex, Zed, Aider, ...)
+    └── paste-based/my-project/  ← prompt template for chat tools without auto-load
+```
+
+Every example contains the same three features and the same example context history, so you can diff the tools against each other. The spec content is identical on purpose; only the wiring around it differs.
+
+| Feature | Domain | What it shows |
+|---------|--------|---------------|
+| `password-reset` | Backend, security | Full-size spec: glossary, EARS, error-flow table, 5 tasks in 4 waves |
+| `health-check` | Backend, operations | Small spec: 503 vs 500, no information leak, logging levels |
+| `skip-navigation` | Frontend, accessibility | Non-backend spec: HTML/CSS design, edge cases, manual test task |
+
+**How to use an example:** copy `examples/<tool>/my-project/` into your project, run the deploy script (see [Master Rules](#-the-master-rules-ai-rulesmd)), and replace the `[...]` placeholders in the context files.
+
 ---
 
 ## 🧠 The Two Layers: Steering vs. Specs
 
 Understanding this distinction is the key insight. Your AI context consists of two fundamentally different layers:
 
-### 🔵 Steering Files (Permanent Project DNA)
+### 🔵 Steering (Permanent Project DNA)
 
-These files are **always loaded** into every AI interaction. They teach the AI *who your project is* — its rules, architecture, and tooling. They never change between features.
+These files are **loaded into every AI interaction** (or on demand, depending on the tool). They teach the AI *who your project is* — its rules, architecture, and tooling. They never change between features.
 
 | File | Purpose | Answers |
 |------|---------|---------|
-| `global_rules.md` | Coding standards, Git workflow, naming conventions | "How do we write code here?" |
+| Rules file (from `.ai-rules.md`) | Coding standards, Git workflow, naming conventions | "How do we write code here?" |
 | `product.md` | Product vision, capabilities, design principles | "What does this project do and why?" |
 | `structure.md` | File tree, architectural patterns, module layout | "Where do things live?" |
 | `tech.md` | Stack, dependencies, build/test/run commands | "How do I build and test this?" |
+
+The name and location of the rules file is the only tool-specific part (`global_rules.md`, `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, ...). See the [compatibility matrix](#-tool-compatibility-matrix).
 
 **Lifespan:** Lives with the project forever. Updated when the project evolves (new dependency, new module, version bump).
 
@@ -27,21 +63,21 @@ These files are **created per feature** and guide a specific implementation effo
 
 | File | Purpose | Answers |
 |------|---------|---------|
-| `requirements.md` | Business logic, user stories, acceptance criteria (EARS) | "What must the system do?" |
+| `requirements.md` | Glossary, user stories, acceptance criteria (EARS) | "What must the system do?" |
 | `design.md` | Architecture, API contracts, data flow, error handling | "How should it be built?" |
-| `tasks.md` | Implementation checklist with status tracking | "What's next?" |
+| `tasks.md` | Implementation checklist with status tracking and dependency graph | "What's next?" |
 
 **Lifespan:** Created at feature start, completed when the feature ships. Kept for historical reference.
 
 ### Why This Matters
 
-Without steering files, the AI:
+Without steering, the AI:
 - Invents features that contradict your product vision
 - Puts files in wrong directories
 - Suggests wrong frameworks and build commands
 - Ignores your architectural patterns
 
-Without spec files, the AI:
+Without specs, the AI:
 - Guesses at business requirements
 - Makes poor design decisions
 - Works in unpredictable order
@@ -53,7 +89,7 @@ Without spec files, the AI:
 
 ## ✂️ Feature Cutting: One Folder per Feature
 
-The single most important structural insight: **don't keep one flat set of spec files at the project root.** Instead, **cut each feature into its own self-contained spec folder.** This is the difference between the simplified layout you often see in tutorials and how mature projects actually run.
+**Don't keep one flat set of spec files at the project root.** Cut each feature into its own self-contained spec folder. This is the difference between the simplified layout you see in tutorials and how mature projects run.
 
 ### Flat (the simplified starting point)
 
@@ -64,350 +100,335 @@ my-project/
 └── tasks.md
 ```
 
-One feature at a time. The moment you start a second feature, you either overwrite the first or lose its history. There's no isolation, no parallelism, and no traceable record of what was built.
+One feature at a time. The moment you start a second feature, you either overwrite the first or lose its history. There is no isolation, no parallelism, and no traceable record of what was built. (This repository used to be laid out this way. The new layout in `examples/` replaces it.)
 
 ### Feature-Cut (the recommended structure)
 
-Each feature is a **vertical slice** — its own folder under `.kiro/specs/<feature-name>/`, carried end-to-end through the full pipeline (EARS requirements → design → tasks):
+Each feature is a **vertical slice** with its own folder, carried end-to-end through the pipeline (EARS requirements → design → tasks):
 
 ```
-.kiro/
-└── specs/
-    ├── personal-summary-box/      ← one feature, fully scoped
-    │   ├── requirements.md         ← EARS acceptance criteria + glossary
-    │   ├── design.md               ← architecture, data flow, error handling
-    │   ├── tasks.md                ← task waves + dependency graph
-    │   └── .config.kiro            ← spec metadata (id, workflow, type)
-    └── skip-navigation/            ← another feature, running in parallel
-        ├── requirements.md
-        ├── design.md
-        ├── tasks.md
-        └── .config.kiro
+specs/                          (Kiro: .kiro/specs/)
+├── password-reset/             ← one feature, fully scoped
+│   ├── requirements.md         ← glossary + EARS acceptance criteria
+│   ├── design.md               ← architecture, data flow, error handling
+│   ├── tasks.md                ← tasks + dependency graph (waves)
+│   └── .config.kiro            ← Kiro only: spec metadata
+├── health-check/               ← runs in parallel, zero overlap
+│   └── ...
+└── skip-navigation/            ← another feature, same structure
+    └── ...
 ```
 
 ### Why cut features this way
 
-- **Isolation** — each feature has its own requirements, design, and tasks. Nothing bleeds between features.
-- **Parallelism** — `personal-summary-box` and `skip-navigation` coexist. You (or multiple people/agents) can work on both without collision.
-- **Traceability** — a shipped feature keeps its full spec as permanent documentation. You can always answer "why was this built this way?"
-- **Focused AI context** — you point the AI at exactly one spec folder, so it sees only the requirements and design relevant to the feature it's implementing — not a soup of every feature you've ever touched.
-- **Named-entity precision** — a scoped `requirements.md` can define its own **Glossary** (e.g. `Summary_Box`, `Profile_Page`, `Website_Renderer`) and write EARS criteria against those exact entities, removing ambiguity for the agent.
+- **Isolation:** each feature has its own requirements, design, and tasks. Nothing bleeds between features.
+- **Parallelism:** features coexist. You (or multiple people/agents) can work on several without collision.
+- **Traceability:** a shipped feature keeps its full spec as documentation. You can always answer "why was this built this way?"
+- **Focused AI context:** you point the AI at exactly one spec folder, so it sees only what the feature needs.
+- **Named-entity precision:** a scoped `requirements.md` defines its own **Glossary** (`Reset_Service`, `Reset_Token`, `Mailer`, ...) and writes EARS criteria against those exact entities. See [`requirements.md`](examples/kiro/my-project/.kiro/specs/password-reset/requirements.md).
+- **Execution order:** `tasks.md` closes with a dependency graph, so the agent knows what can run in parallel:
 
-> **Real example — `cescon.de`:** The `personal-summary-box` spec defines named entities in a Glossary, then writes acceptance criteria like *"THE Website_Renderer SHALL display the Summary_Box on the Profile_Page between the Data_Table_Card and the Profile_Sections."* Its `design.md` documents the exact template location and JSON-LD change, and its `tasks.md` closes with a task dependency graph so the agent knows execution order:
->
-> ```json
-> {
->   "waves": [
->     { "id": 0, "tasks": ["1.1"] },
->     { "id": 1, "tasks": ["2.1"] }
->   ]
-> }
-> ```
->
-> A second feature, `skip-navigation`, lives right beside it in its own folder — same structure, zero overlap.
+```json
+{
+  "waves": [
+    { "id": 0, "tasks": ["1"] },
+    { "id": 1, "tasks": ["2"] },
+    { "id": 2, "tasks": ["3", "5"] },
+    { "id": 3, "tasks": ["4"] }
+  ]
+}
+```
 
-**Rule of thumb:** start flat only for a throwaway one-off. For anything real, cut the feature into `.kiro/specs/<feature-name>/` from the very first requirement.
+**Rule of thumb:** start flat only for a throwaway one-off. For anything real, cut the feature into its own folder from the first requirement.
 
 ---
 
-## 📁 Document Overview
+## 📜 The Master Rules: `.ai-rules.md`
 
-### Steering Files
+`.ai-rules.md` in the repository root is the **single source of truth** for coding standards, Git workflow, naming, error handling and database conventions. It is tool-neutral and stays where it is.
 
-#### 1. `.ai-rules.md` / `global_rules.md` (The House Rules)
-* **Purpose:** Contains global project standards (Git workflow, naming conventions, database schemas, and coding paradigms like the Bouncer Pattern).
-* **Scope:** **Global — applies to every project and every AI tool you use.** This is the "DNA" of your code quality. You maintain one master copy and reference it from each AI tool (see Setup below).
+Every tool wants its rules in a different file. Each example therefore contains a **rules file with a clearly marked placeholder block**:
 
-#### 2. `product.md` (The Product Vision)
-* **Purpose:** Describes what the project IS — its core capabilities, design principles, and current version. Prevents the AI from making decisions that contradict your product direction.
-* **Scope:** Project-wide. Updated when capabilities change or new versions are released.
+```markdown
+<!-- BEGIN:ai-rules - filled by scripts/deploy_rules.py from .ai-rules.md, do not edit between the markers -->
+> ⚠ TEMPLATE - ACTION REQUIRED: Replace this block with the full content of the master file `.ai-rules.md` ...
+<!-- END:ai-rules -->
+```
 
-#### 3. `structure.md` (The Architecture Map)
-* **Purpose:** Documents the file tree, module layout, and architectural patterns. Tells the AI exactly where to put new code and how existing components interact.
-* **Scope:** Project-wide. Updated when new modules or patterns are introduced.
+There are two ways to fill it:
 
-#### 4. `tech.md` (The Tech Stack)
-* **Purpose:** Lists the language, dependencies, build commands, test framework, and environment variables. Eliminates "let me install X for you" problems.
-* **Scope:** Project-wide. Updated when dependencies or tooling change.
+1. **By hand:** paste the content of `.ai-rules.md` between the markers.
+2. **With the script (recommended):** it replaces only the text between the markers and leaves everything else untouched (front matter, imports, project context). Safe to run repeatedly.
 
-### Spec Files
+```bash
+python3 scripts/deploy_rules.py --list                       # supported tools and target files
+python3 scripts/deploy_rules.py kiro   ~/work/my-project     # -> .kiro/steering/global_rules.md
+python3 scripts/deploy_rules.py claude ~/work/my-project     # -> CLAUDE.md
+```
 
-#### 5. `requirements.md` (The "What")
-* **Purpose:** Defines the business logic and user requirements using the **EARS Notation** (Easy Approach to Requirements Syntax).
-* **Scope:** Feature-specific. It tells the AI exactly what conditions must be met (WHEN/THEN) without ambiguity.
+| Tool | Target file in the project | Script name |
+|------|----------------------------|-------------|
+| Kiro | `.kiro/steering/global_rules.md` | `kiro` |
+| Claude Code | `CLAUDE.md` | `claude` |
+| Gemini CLI | `GEMINI.md` | `gemini` |
+| Antigravity | `AGENTS.md` | `antigravity` |
+| Cursor | `.cursor/rules/global-rules.mdc` | `cursor` |
+| GitHub Copilot | `.github/copilot-instructions.md` | `copilot` |
+| AGENTS.md (generic) | `AGENTS.md` | `agents-md` |
 
-#### 6. `design.md` (The "How")
-* **Purpose:** The technical blueprint. It defines the architecture (Service Layer, Repository Pattern), API endpoints, data flow, and **error/edge case handling**.
-* **Scope:** Feature-specific. It prevents the AI from making poor architectural choices.
+The script exits with code `2` (usage / unknown tool), `3` (file not readable) or `4` (markers missing).
 
-#### 7. `tasks.md` (The "When")
-* **Purpose:** An iterative checklist for the AI.
-* **Scope:** Implementation-specific. It allows you to track progress and forces the AI to work in small, testable increments.
+**Enterprise variant:** run the script from CI/CD or Ansible against every project. Rules are versioned in the repo, reviewed via PR, and new developers get them on clone. Projects extend the base rules in additional files (steering files, `.claude/rules/`, `.agents/rules/`, ...) without touching the shared master.
+
+> ⚠ **Do not put secrets into rules files.** They are part of your codebase, and some tools (e.g. Claude Code with `@` imports, Kiro with `#[[file:...]]`) pull referenced files into the context.
 
 ---
 
-## 🚀 How to Setup
+## 🧩 Tool Compatibility Matrix
 
-The `.ai-rules.md` file is your **single source of truth**. You maintain it once and wire it into each AI tool differently. Here is how:
+One look to see how each tool loads steering and where the tool-specific parts end. Details per tool follow below.
 
----
+| Tool | Always-on rules file | Scoped / on-demand rules | Imports | Verify it loaded |
+|------|----------------------|--------------------------|---------|------------------|
+| **Kiro** | `.kiro/steering/*.md` (`inclusion: always`), `AGENTS.md` | front matter: `fileMatch`, `manual`, `auto` | `#[[file:path]]` | Steering view in the Kiro panel |
+| **Claude Code** | `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md` (personal) | `.claude/rules/*.md` with `paths:` | `@path` | `/context all` |
+| **Gemini CLI** | `GEMINI.md` (hierarchical, JIT per folder) | nested `GEMINI.md` per directory | `@file.md` | `/memory show` |
+| **Antigravity** | `AGENTS.md` or `GEMINI.md` | `.agents/rules/*.md` with `trigger:` (`always_on`, `model_decision`, `glob`, `manual`) | `@[label](path)` inlines | Customizations panel, CLI `/context` |
+| **Cursor** | `.cursor/rules/*.mdc` (`alwaysApply: true`), `AGENTS.md` | `.mdc` with `globs` or `description` | `@file` reference (read on demand, not inlined) | Cursor Customize, Rules |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md` with `applyTo:` | none | "References" list in chat |
+| **AGENTS.md** (Codex, Zed, Aider, ...) | `AGENTS.md` | nested `AGENTS.md` per directory | none | tool dependent |
 
-### 🟣 Kiro (Recommended)
+**`AGENTS.md` is the common denominator.** It is plain markdown without front matter and, according to its documentation or third-party reports, read by Kiro, Cursor, Copilot, Antigravity, Codex and more. Claude Code reads it as a fallback when no `CLAUDE.md` exists, and Gemini CLI can be told to read it via `context.fileName`. If you want exactly one file for every tool, start with `examples/agents-md/`. Add the tool-specific files only where you need scoping, imports or on-demand loading.
 
-Kiro uses **Steering Files** — markdown files that are automatically injected into every agent interaction.
-
----
-
-#### 🏢 Enterprise Pattern (Recommended)
-
-In an enterprise setup, the **project-level** steering file is the right approach:
-
-```
-.kiro/steering/global_rules.md
-```
-
-**Why project-level wins in enterprise:**
-- Rules are **stack/language-specific** — a Python project has different conventions than a TypeScript one
-- The file lives **inside the repo** — versioned, reviewed via PR, and fully auditable
-- A **central deployment tool** (Ansible, a custom CLI, a GitHub Actions workflow) maintains one master template and pushes it into every project's `.kiro/steering/` automatically
-- Teams can **extend** the base rules per project without touching the shared template
-- New developers get the rules automatically when they clone the repo — no manual setup
-
-**Example deployment workflow:**
-```
-central-rules-repo/
-  global_rules.md          ← single source of truth, maintained by the team
-
-→ CI/CD or Ansible pushes this to every project:
-  project-a/.kiro/steering/global_rules.md
-  project-b/.kiro/steering/global_rules.md
-  project-c/.kiro/steering/global_rules.md  ← can extend with project-specific additions
-```
+> Tool behavior changes quickly. The table reflects the official documentation at the time of writing (see [Sources](#-sources)). Re-check the linked pages before you rely on edge cases.
 
 ---
 
-#### 👤 Personal / Solo Pattern
+## 🚀 Setup per Tool
 
-For personal use across all your own projects, the user-level path is a convenient shortcut:
+Every section points at a ready-to-copy example under `examples/`.
+
+### 🟣 Kiro (recommended) → [`examples/kiro/my-project`](examples/kiro/my-project)
 
 ```
-~/.kiro/steering/global_rules.md
+.kiro/
+├── steering/       global_rules.md, product.md, structure.md, tech.md
+├── specs/          <feature-name>/ requirements.md, design.md, tasks.md, .config.kiro
+└── hooks/          *.json agent hooks
+docs/
+└── context/        CONTEXT_HISTORY_<year>-<month>-<day>_<task>.md   (tool-neutral)
 ```
 
-Kiro will apply these rules to every workspace on your machine. Good for personal projects, not suitable for team environments where rules need to be versioned per repo.
+**Steering.** Markdown files in `.kiro/steering/` (workspace) or `~/.kiro/steering/` (global, personal). On conflict the workspace file wins. `product.md`, `tech.md` and `structure.md` are Kiro's foundation files and are included by default.
 
----
+Four inclusion modes, set via front matter:
 
-**How to create a steering file:**
-Create `global_rules.md` in the appropriate location and paste in your `.ai-rules.md` content. Optionally add a front-matter header to control when it loads:
+| Mode | Front matter | Loaded when |
+|------|--------------|-------------|
+| always | `inclusion: always` | every interaction (default) |
+| fileMatch | `inclusion: fileMatch` + `fileMatchPattern: "**/*.py"` | a matching file is in context |
+| manual | `inclusion: manual` | you type `#file-name` in chat |
+| auto | `inclusion: auto` + `name` + `description` | your request matches the description |
+
+`auto` keeps big reference material out of the context until it is relevant. That is the cheapest way to scale steering.
 
 ```markdown
 ---
-inclusion: always
+inclusion: auto
+name: api-design
+description: REST API design patterns and conventions. Use when creating or modifying API endpoints.
 ---
-# Global AI Coding & Workflow Rules
-...
 ```
 
-> `inclusion: always` — loaded on every interaction (default).  
-> `inclusion: manual` — only when you explicitly reference it with `#global_rules` in chat.  
-> `inclusion: fileMatch` + `fileMatchPattern: '**/*.py'` — only when a matching file is in context.
+Other details worth knowing:
+- `AGENTS.md` in the workspace root, in subfolders or in `~/.kiro/steering/` is picked up automatically. It has no inclusion modes and is always included.
+- Link live files with `#[[file:<relative_path>]]` (IDE and CLI V3 also support line ranges `:12-28` and `#[[folder:<path>]]`).
+- **Custom agents do not get steering automatically.** Add `"resources": ["file://.kiro/steering/**/*.md"]` to the agent configuration.
+- In Kiro CLI, inclusion modes depend on the CLI version (V3 full, V1/V2 partial). Check the steering docs.
+- Amazon Q Developer CLI has become **Kiro CLI**. According to the Kiro upgrade guide, existing Q CLI workflows, subscription and authentication keep working.
 
-You can also reference other files directly inside a steering file:
-```markdown
-#[[file:requirements.md]]
+**Specs.** `.kiro/specs/<feature-name>/` (three in the example) with `requirements.md`, `design.md`, `tasks.md` and `.config.kiro` (`specId`, `workflowType`, `specType`). Kiro supports requirements-first and design-first workflows. Kiro generates and runs the tasks for you; the example shows the file format.
+
+**Hooks.** JSON files in `.kiro/hooks/`. The example [`context-history-reminder.json`](examples/kiro/my-project/.kiro/hooks/context-history-reminder.json) asks the agent at the end of every run (`Stop`) to update the context history. That automates step 6 of the workflow. Other useful triggers: `PostFileSave` (lint), `PostTaskExec` (run tests), `PreToolUse` (guard against writes to sensitive paths).
+
+**Team distribution.** Global steering can be pushed to developer machines (MDM, group policy, Ansible) or to every repo via `deploy_rules.py` in CI. Treat steering changes like code changes: review them.
+
+```bash
+python3 scripts/deploy_rules.py kiro ~/work/my-project
 ```
-This injects the full content of `requirements.md` into the steering context automatically.
-
----
-
-### 🟡 Cursor / VS Code (Copilot / Continue)
-
-`.cursorrules` has become the **de facto universal standard** for AI extensions, even though it originated in Cursor.
-
-Place the file in your project root:
-```
-.cursorrules
-```
-This is simply a copy or symlink of your `.ai-rules.md`. Most AI extensions (Cursor, GitHub Copilot Chat, Continue.dev) will pick it up automatically.
-
-When opening a new chat session in tools that don't auto-load it, start with:
-> **"Strictly adhere to the rules in `.cursorrules` for all code suggestions and Git operations."**
 
 ---
 
-### 🔵 Claude (Anthropic)
-
-Claude uses a `CLAUDE.md` file in your project root:
-```
-CLAUDE.md
-```
-This file is automatically loaded by Claude Code and Claude.ai projects. Use it to reference your rules and additional context files:
-
-```markdown
-# Project Rules
-See full rules: @.ai-rules.md
-
-# Active Feature Context
-See requirements: @.specs/personal-summary-box/requirements.md
-See design: @.specs/personal-summary-box/design.md
-```
-
-> Claude Code uses `@path` to pull a file into context. (The `#[[file:...]]` syntax is Kiro-specific.)
-
-**Feature cutting works here too.** `CLAUDE.md` is your steering layer; the spec folders are your feature layer. Keep one folder per feature and point Claude at exactly one when you work:
+### 🔵 Claude Code → [`examples/claude/my-project`](examples/claude/my-project)
 
 ```
 my-project/
-├── CLAUDE.md                          ← steering (always loaded)
-├── .claude/                           ← optional: subagents, skills, hooks
-└── specs/
-    ├── personal-summary-box/          ← feature A (cut into its own folder)
-    │   ├── requirements.md
-    │   ├── design.md
-    │   └── tasks.md
-    └── skip-navigation/               ← feature B
-        ├── requirements.md
-        ├── design.md
-        └── tasks.md
+├── CLAUDE.md                  ← rules (from .ai-rules.md) + @imports of docs/*.md
+├── CLAUDE.local.md            ← personal, in .gitignore
+├── .claude/
+│   └── rules/specs.md         ← path-scoped rule: loads only when touching specs/**
+├── docs/                      ← product.md, structure.md, tech.md, context/
+└── specs/                     ← password-reset/, health-check/, skip-navigation/
 ```
 
-Then drive one feature at a time:
-> *"Read `specs/personal-summary-box/` and implement Task 1 from its `tasks.md`, following the rules in `CLAUDE.md`."*
+- `CLAUDE.md` is context, not enforcement. Keep it under roughly 200 lines. Move narrow guidance into `.claude/rules/*.md` with `paths:` front matter so it only loads when matching files are touched.
+- `@path/to/file` imports expand the file into the context together with `CLAUDE.md`. Imports organize a long file but do not reduce its token cost.
+- Subdirectory `CLAUDE.md` files load on demand when Claude touches files there.
+- To **block** an action regardless of what the model decides, use a `PreToolUse` hook or `permissions.deny`, not an instruction.
+- Claude Code can read `AGENTS.md` as project instructions. If you already have `AGENTS.md`, you can skip `CLAUDE.md` or import it with `@AGENTS.md`. Check the `Project instructions` setting in `/config` for the exact mode.
+- Verify with `/context all` (shows the loaded memory files).
 
-> **Tip:** Claude respects file references well, and its **subagents** map naturally onto feature cutting — spin up an isolated subagent scoped to a single spec folder so its context stays clean.
+Drive one feature at a time:
+> *"Read `specs/password-reset/` and implement Task 2 from its `tasks.md`, following the rules in `CLAUDE.md`."*
+
+**Tip:** Claude Code subagents map naturally onto feature cutting. Spin up an isolated subagent scoped to a single spec folder so its context stays clean.
 
 ---
 
-### 🟢 Gemini CLI (Google)
-
-Gemini CLI has a native auto-load mechanism: **`GEMINI.md`** context files. The CLI loads them **hierarchically** — from the project root down to the current subfolder — and concatenates all found files into every prompt ([docs](https://geminicli.com/docs/cli/gemini-md/)). That hierarchy is exactly what makes feature cutting work cleanly:
+### 🟢 Gemini CLI → [`examples/gemini/my-project`](examples/gemini/my-project)
 
 ```
 my-project/
-├── GEMINI.md                          ← root steering (always loaded)
-├── .gemini/                           ← optional: settings, custom commands
+├── GEMINI.md                          ← root steering (rules + @./docs imports)
+├── docs/                              ← product.md, structure.md, tech.md, context/
 └── specs/
-    ├── personal-summary-box/
-    │   ├── GEMINI.md                  ← feature-scoped context, loaded only when working here
-    │   ├── requirements.md
-    │   ├── design.md
-    │   └── tasks.md
-    └── skip-navigation/
-        ├── GEMINI.md
-        ├── requirements.md
-        ├── design.md
-        └── tasks.md
+    ├── password-reset/
+    │   ├── GEMINI.md                  ← feature-scoped context
+    │   └── requirements.md, design.md, tasks.md
+    ├── health-check/                  ← same layout, own GEMINI.md
+    └── skip-navigation/               ← same layout, own GEMINI.md
 ```
 
-**How the hierarchy cuts features:** the root `GEMINI.md` holds your global rules (steering). When you run Gemini CLI from inside `specs/personal-summary-box/`, it *also* picks up that folder's `GEMINI.md` — so the agent sees your global rules **plus** only this feature's context, and nothing from other features. That per-folder scoping is the feature cut, enforced by the tool itself.
+Gemini CLI loads context files hierarchically: global `~/.gemini/GEMINI.md`, then workspace and parent directories, then **just-in-time** any `GEMINI.md` in directories a tool touches. That hierarchy **is** the feature cut: when the agent works in `specs/password-reset/`, it sees the global rules plus only that feature's `GEMINI.md`.
 
-A feature-level `GEMINI.md` can simply point at the spec files:
-```markdown
-# Feature: Personal Summary Box
-Follow global rules in the root GEMINI.md.
-Requirements: @requirements.md
-Design: @design.md
-Implement tasks from @tasks.md one at a time.
+- `@file.md` imports (relative or absolute) modularize large files.
+- `/memory show` prints the concatenated context, `/memory reload` re-scans.
+- The context file name is configurable. To let Gemini read `AGENTS.md` too, set this in your Gemini CLI `settings.json` (for example the project-level `.gemini/settings.json`):
+
+```json
+{ "context": { "fileName": ["GEMINI.md", "AGENTS.md"] } }
 ```
 
 ---
 
-### 🟣 Google Antigravity (Agent-First IDE)
-
-[Antigravity](https://antigravity.google/) is Google's agentic development platform (launched late 2025). It inverts the usual model: instead of AI-as-autocomplete, you hand **agents** an objective and they plan, execute, and verify across the editor, terminal, and browser ([announcement](https://developers.googleblog.com/en/build-with-google-antigravity-our-new-agentic-development-platform/)).
-
-Two Antigravity concepts map directly onto this repo's two layers:
-
-| Antigravity concept | Maps to | Role |
-|---------------------|---------|------|
-| `agents.md` / `skills.md` | Steering | Persistent rules and reusable skills loaded across the workspace |
-| **Artifacts** (implementation plans, task lists, walkthroughs, screenshots) | Specs | Per-objective, reviewable outputs the agent produces and you approve |
-
-**Feature cutting in Antigravity:** Google explicitly supports **Spec-Driven Development** here ([official codelab](https://codelabs.developers.google.com/codelabs/getting-started-with-spec-driven-development-in-antigravity)). Each objective/feature produces its own set of **Artifacts** — a plan, a task list, a walkthrough — which are the tool-native equivalent of a feature's `requirements.md` / `design.md` / `tasks.md`. Because Artifacts are reviewable "receipts", you verify agent work per feature at a glance instead of reading raw logs.
-
-Recommended pattern — keep the same feature-cut folders and let Antigravity's agent work one spec at a time:
+### 🟣 Google Antigravity → [`examples/antigravity/my-project`](examples/antigravity/my-project)
 
 ```
 my-project/
-├── agents.md                          ← steering: rules, conventions (always on)
-├── skills.md                          ← reusable skills the agent can invoke
-└── specs/
-    ├── personal-summary-box/          ← feature A → its own Artifacts
-    │   ├── requirements.md
-    │   ├── design.md
-    │   └── tasks.md
-    └── skip-navigation/               ← feature B
-        └── ...
+├── AGENTS.md                              ← always-on rules (no front matter)
+├── .agents/
+│   ├── rules/specs-workflow.md            ← rule with trigger: model_decision
+│   └── skills/implement-spec-task/SKILL.md
+├── docs/                                  ← product.md, structure.md, tech.md, context/
+└── specs/                                 ← password-reset/, health-check/, skip-navigation/
 ```
 
-> **Portability payoff:** because your specs are plain markdown in per-feature folders, the *same* `specs/personal-summary-box/` set drives Kiro, Claude Code, Gemini CLI, and Antigravity. Only the steering wiring differs per tool (`global_rules.md` vs `CLAUDE.md` vs `GEMINI.md` vs `agents.md`). Cut the feature once; run it anywhere.
+- Always-on guidance goes into `AGENTS.md` (or `GEMINI.md`). Both need **no** front matter.
+- Files in `.agents/rules/*.md` **must** start with front matter. `trigger` is `always_on`, `model_decision` (needs `description`), `glob` (needs `globs`) or `manual`. A rule without a valid trigger is not loaded, so check the spelling.
+- `@[label](path)` inlines another file, `@filename` only resolves the path.
+- **Limits:** 24,000 bytes per rule file, 20,000 tokens for all always-on and global rules together. Put long, narrow guidance into `model_decision` or `glob` rules.
+- Antigravity loads rules from the workspace folder and its parents up to the repository root. It does **not** load rules from subfolders below the workspace. That is why this example has no per-feature rule file; it uses the skill instead.
+- **Skills replace workflows.** Reusable procedures live in `.agents/skills/<name>/SKILL.md`. Legacy workflows in `.agents/workflows/` were announced to stop working on October 19, 2026. Run `/migrate-workflows` if you still have some.
+- **Artifacts** (implementation plans, task lists, walkthroughs) are Antigravity's per-objective outputs. They play the role of a feature's `design.md` / `tasks.md`, and Google documents a spec-driven workflow in its [codelab](https://codelabs.developers.google.com/codelabs/getting-started-with-spec-driven-development-in-antigravity).
 
 ---
 
-### 🟠 Amazon Q / ChatGPT and other LLMs (paste-based)
+### 🟠 Cursor → [`examples/cursor/my-project`](examples/cursor/my-project)
 
-These tools don't have a native project auto-load mechanism. The workflow is:
-
-1. Keep your `.ai-rules.md` in the project root (or a central location).
-2. When starting a new chat session, **attach or paste** the file content.
-3. Open with this prompt:
-   > **"Strictly adhere to these specifications for all code suggestions and Git operations."**
-4. For feature work, also attach the spec files **from the one feature folder you're working on**.
-
-**Example opening prompt:**
 ```
-Strictly adhere to these specifications for all code suggestions and Git operations.
-
-[paste .ai-rules.md content]
-
-I am now working on the following feature:
-
-[paste specs/personal-summary-box/requirements.md content]
-[paste specs/personal-summary-box/design.md content]
-
-Implement Task 2 from the task list below:
-
-[paste specs/personal-summary-box/tasks.md content]
+my-project/
+├── .cursor/rules/
+│   ├── global-rules.mdc        ← alwaysApply: true (rules from .ai-rules.md)
+│   ├── project-context.mdc     ← alwaysApply: true, points at docs/*.md
+│   └── specs-workflow.mdc      ← globs: specs/**
+├── docs/                       ← product.md, structure.md, tech.md, context/
+└── specs/                      ← three feature folders
 ```
 
-> Even without auto-load, feature cutting still pays off: you paste exactly one feature's folder, so the model never sees unrelated specs.
+- Project rules are `.mdc` files in `.cursor/rules/`. **A plain `.md` file in that folder is ignored.**
+- Front matter fields: `description`, `globs`, `alwaysApply`. They give four behaviors: always, auto-attached by glob, agent-decided by description, manual via `@rule-name`.
+- Mentioning a file in a rule (`@docs/tech.md`) lets the agent read it when needed. It is **not** inlined. Paste into the rule body if something must always be in context.
+- Cursor also reads `AGENTS.md` in the root and in subdirectories, as a simple alternative to rules.
+- The legacy `.cursorrules` file is no longer part of the current rules documentation. Use `.cursor/rules/*.mdc` or `AGENTS.md`.
+
+---
+
+### ⚫ GitHub Copilot → [`examples/copilot/my-project`](examples/copilot/my-project)
+
+```
+my-project/
+├── .github/
+│   ├── copilot-instructions.md                 ← repository-wide rules
+│   └── instructions/specs.instructions.md      ← applyTo: "specs/**"
+├── docs/                       ← product.md, structure.md, tech.md, context/
+└── specs/                      ← three feature folders
+```
+
+- `.github/copilot-instructions.md` applies to the whole repository.
+- Path-specific files must end with `.instructions.md` and start with `applyTo:` glob front matter. On GitHub.com they currently apply to the cloud agent and code review.
+- Copilot code review reads instructions from the **head** branch of a pull request, so you can test instruction changes in the same PR.
+- Copilot has no import syntax. Point at files by path.
+
+---
+
+### ⚪ AGENTS.md, the tool-neutral baseline → [`examples/agents-md/my-project`](examples/agents-md/my-project)
+
+One plain-markdown file at the repository root (nested ones allowed in monorepos). No front matter, no imports, no lock-in. Start here if you use several tools, or tools not listed above (Codex, Zed, Aider, ...). Add tool-specific files only for scoping and on-demand loading.
+
+---
+
+### 🟡 Paste-based chat tools (ChatGPT and others) → [`examples/paste-based/my-project`](examples/paste-based/my-project)
+
+For tools without a project auto-load mechanism:
+
+1. Keep `.ai-rules.md` and the `docs/` files at hand.
+2. Start every chat with [`prompt-template.md`](examples/paste-based/my-project/prompt-template.md).
+3. Paste **one** feature folder only. Even without auto-load, feature cutting pays off: the model never sees unrelated specs.
 
 ---
 
 ## 🛠 Workflow Routine
 
 ### One-Time Project Setup (Steering)
-1. **Create** `product.md` — describe what your project does, its principles, current version.
-2. **Create** `structure.md` — document your file tree and architectural patterns.
-3. **Create** `tech.md` — list your stack, dependencies, build/test commands.
-4. **Create** `global_rules.md` — your coding standards (or use the `.ai-rules.md` template from this repo).
+1. **Copy** `examples/<tool>/my-project/` into your project.
+2. **Deploy the rules:** `python3 scripts/deploy_rules.py <tool> <project-dir>`.
+3. **Fill** `product.md`, `structure.md`, `tech.md` (templates in `templates/steering/`).
+4. **Verify** the tool actually loaded them (see the matrix column "Verify it loaded").
 
 ### Per-Feature Workflow (Specs)
-1. **Cut the feature** — create a dedicated folder `.kiro/specs/<feature-name>/` (e.g. `.kiro/specs/personal-summary-box/`). Everything for this feature lives here.
-2. **Draft** `requirements.md` and `design.md` inside that folder (define a Glossary of named entities, then write EARS criteria against them; include error/edge case flows in the design).
-3. **Initialize** `tasks.md` — link each task back to the requirement/design section it implements (e.g., `← design.md §2, requirements §2.1`), and add a task dependency graph so the agent knows execution order.
-4. **Point the AI** at the one folder: *"Implement Task 1 from `.kiro/specs/personal-summary-box/tasks.md` based on the specs in that folder."*
-5. **Verify** the output against your `.ai-rules.md`.
-6. **Log context** in `.kiro/context/CONTEXT_HISTORY_<year>-<month>-<day>_<task_name>.md` for traceability.
-7. **Keep the folder** after shipping — the completed spec becomes permanent documentation for that feature.
+1. **Cut the feature:** create `specs/<feature-name>/` (Kiro: `.kiro/specs/<feature-name>/`).
+2. **Draft** `requirements.md` and `design.md`. Define a Glossary of named entities, then write EARS criteria against them. Include error and edge case flows in the design.
+3. **Initialize** `tasks.md`. Link each task back to the requirement or design section it implements (`← design.md §2, requirements §2.1`) and add the dependency graph.
+4. **Point the AI** at the one folder: *"Implement Task 1 from `specs/password-reset/tasks.md` based on the specs in that folder."*
+5. **Verify** the output against `.ai-rules.md`.
+6. **Log context** in `docs/context/CONTEXT_HISTORY_<year>-<month>-<day>_<task_name>.md` (location defined in `.ai-rules.md`, section 9; see the [example](examples/kiro/my-project/docs/context/CONTEXT_HISTORY_2026-06-01_password-reset.md)). The path is tool-neutral on purpose, so every tool reads the same history. In Kiro, a `Stop` hook can write it for you.
+7. **Keep the folder** after shipping. The completed spec is permanent documentation.
 
-### When to Update Steering Files
+### When to Update Steering
 
 | File | Update when... |
 |------|---------------|
 | `product.md` | After each version release or capability addition |
 | `structure.md` | When adding new modules, directories, or changing patterns |
 | `tech.md` | When adding/upgrading dependencies or changing build/test commands |
-| `global_rules.md` | Rarely — only when team-wide standards evolve |
+| Rules file | Rarely, only when team-wide standards evolve. Change `.ai-rules.md`, then re-run `deploy_rules.py` |
 
-> **Tip:** Stale steering files are worse than no steering files. An outdated `tech.md` that lists old dependencies will actively mislead the AI. Keep them current or remove them.
+> **Tip:** Stale steering is worse than no steering. An outdated `tech.md` that lists old dependencies will actively mislead the AI. Keep it current or remove it.
+
+---
+
+## 💸 Keeping the Context (and the Bill) Small
+
+Every always-on line costs tokens in every interaction. The structure in this repo is built to keep that small:
+
+- **Feature cutting:** the agent reads one spec folder, not every spec.
+- **On-demand loading:** use Kiro `auto`/`fileMatch`, Claude `paths:`, Antigravity `model_decision`/`glob`, Cursor `globs`, Copilot `applyTo` for narrow guidance.
+- **Short always-on files:** around 200 lines for `CLAUDE.md`, 24 KB per Antigravity rule file. Split beyond that.
+- **Skills over rules for procedures:** step-by-step workflows (deploy, implement a spec task) only load when needed.
 
 ---
 
 ## ⚠️ Common Anti-Patterns (What Goes Wrong Without This)
-
-These are real failure modes you'll encounter when AI lacks proper context:
 
 | Problem | Root Cause | Solved By |
 |---------|-----------|-----------|
@@ -417,42 +438,29 @@ These are real failure modes you'll encounter when AI lacks proper context:
 | "The AI added a feature that contradicts our product philosophy" | AI doesn't know your design principles | `product.md` |
 | "The AI used jest for testing but we use pytest" | AI defaults to popular choices, not yours | `tech.md` |
 | "The AI forgot what we discussed in the last session" | No persistent session memory | Context History |
-| "The AI writes code with deep nesting and no input validation" | No coding standards loaded | `global_rules.md` |
+| "The AI writes code with deep nesting and no input validation" | No coding standards loaded | Rules file from `.ai-rules.md` |
+| "The AI ignored my rule and changed a protected file anyway" | Instructions are context, not enforcement | Hooks / permission deny rules per tool |
+| "My rules are loaded in Kiro but not in Claude" | Different file names per tool | `deploy_rules.py` + `AGENTS.md` |
+| "The rule file silently has no effect" | Wrong extension or missing front matter (Cursor `.md`, Antigravity trigger, Copilot `.instructions.md`) | The per-tool notes above |
 
-**The pattern:** Every time an AI "does something stupid", the real problem is missing context. These files eliminate the guessing.
+**The pattern:** every time an AI "does something stupid", the real problem is missing context. These files eliminate the guessing.
 
 ---
 
-## 📂 Example: File Layout in a Real Project
+## 📚 Sources
 
-```
-my-project/
-├── .kiro/
-│   ├── steering/                       ← ALWAYS-ON CONTEXT
-│   │   ├── global_rules.md            ← Coding standards
-│   │   ├── product.md                 ← Product vision
-│   │   ├── structure.md               ← Architecture map
-│   │   └── tech.md                    ← Stack & tooling
-│   ├── specs/                          ← FEATURE-CUT SPECS (one folder per feature)
-│   │   ├── personal-summary-box/       ← Feature A (its own vertical slice)
-│   │   │   ├── requirements.md         ← EARS criteria + glossary
-│   │   │   ├── design.md               ← Architecture & data flow
-│   │   │   ├── tasks.md                ← Task waves + dependency graph
-│   │   │   └── .config.kiro            ← Spec metadata
-│   │   └── skip-navigation/            ← Feature B (parallel, isolated)
-│   │       ├── requirements.md
-│   │       ├── design.md
-│   │       ├── tasks.md
-│   │       └── .config.kiro
-│   └── context/                        ← SESSION LOGS
-│       └── CONTEXT_HISTORY_2026-06-01_password-reset.md
-├── src/                                ← Your actual code
-└── .ai-rules.md                        ← For non-Kiro tools (Gemini, Q, etc.)
-```
+Content was rephrased from the following documentation for this readme. Behavior may have changed since, so check the originals.
 
-> **Feature cutting in action:** Each feature gets its own folder under `.kiro/specs/`, so features stay isolated, run in parallel, and keep their full spec history after shipping. This is the recommended structure for any real project.
->
-> **Simplified fallback:** For a throwaway one-off, you *can* drop a single flat `requirements.md` / `design.md` / `tasks.md` at the project root — but you lose isolation and history the moment a second feature appears.
+- Kiro steering: <https://kiro.dev/docs/steering/>
+- Kiro CLI as successor of Q CLI: <https://kiro.dev/docs/upgrade-guides/migrating-from-q/>
+- Claude Code memory and rules: <https://code.claude.com/docs/en/memory>
+- Gemini CLI context files: <https://geminicli.com/docs/cli/gemini-md/>
+- Antigravity rules: <https://antigravity.google/docs/rules>
+- Antigravity skills and workflow migration (third-party summary of the docs): <https://iceberglakehouse.com/posts/2026-03-context-google-antigravity/>
+- Cursor rules: <https://cursor.com/docs/context/rules>
+- GitHub Copilot repository instructions: <https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions>
+- Claude Code reading `AGENTS.md` (third-party report): <https://dev.to/valyuai/claude-code-now-supports-agentsmd-natively-heres-how-it-actually-works-5nl>
+- Cross-tool loading test of `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` (third-party, small sample): <https://dev.to/silo_crow/agentsmd-vs-claudemd-vs-geminimd-what-6-ai-coding-clis-really-read-1gfh>
 
 ---
 
